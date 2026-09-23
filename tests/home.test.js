@@ -43,6 +43,42 @@ test('a pointer gesture with no movement keeps finite state', () => {
   view.destroy();
 });
 
+test('a simple press does not capture the pointer before the card click', () => {
+  const root = document.createElement('main');
+  root.setPointerCapture = vi.fn();
+  document.body.append(root);
+  const view = renderHome(root, {
+    projects: PROJECTS,
+    onSelect: vi.fn(),
+    requestFrame: () => 1,
+    cancelFrame: vi.fn()
+  });
+  root.querySelector('[data-project="nto-stratus"]').dispatchEvent(new PointerEvent('pointerdown', {
+    pointerId: 8,
+    clientY: 100,
+    bubbles: true
+  }));
+  expect(root.setPointerCapture).not.toHaveBeenCalled();
+  view.destroy();
+});
+
+test('drag inertia cannot push the scene beyond the last project', () => {
+  let nextFrame;
+  const root = document.createElement('main');
+  document.body.append(root);
+  const view = renderHome(root, {
+    projects: PROJECTS,
+    onSelect: vi.fn(),
+    requestFrame: (callback) => { nextFrame = callback; return 1; },
+    cancelFrame: vi.fn()
+  });
+  root.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 4, clientY: 800, bubbles: true }));
+  root.dispatchEvent(new PointerEvent('pointermove', { pointerId: 4, clientY: -800, bubbles: true }));
+  for (let frame = 0; frame < 12; frame += 1) nextFrame();
+  expect(view.getState().target).toBeLessThanOrEqual(PROJECTS.length - 1);
+  view.destroy();
+});
+
 describe('keyboard motion', () => {
   test('ArrowDown advances the scene', () => {
     const { root, view } = makeView();

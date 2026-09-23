@@ -41,7 +41,9 @@ export function renderHome(root, {
     velocity: 0,
     pointer: { x: 0, y: 0 },
     dragging: false,
-    lastY: 0
+    lastY: 0,
+    startY: 0,
+    hasCapture: false
   };
   let frameId = 0;
 
@@ -49,6 +51,9 @@ export function renderHome(root, {
     state.position += (state.target - state.position) * 0.075;
     state.velocity *= 0.9;
     state.target += state.velocity;
+    const boundedTarget = Math.max(0, Math.min(projects.length - 1, state.target));
+    if (boundedTarget !== state.target) state.velocity = 0;
+    state.target = boundedTarget;
     const viewport = { width: window.innerWidth, height: window.innerHeight };
     cards.forEach((card, index) => {
       const transform = getCardTransform(index, state.position, viewport, state.pointer);
@@ -74,14 +79,19 @@ export function renderHome(root, {
   const onPointerDown = (event) => {
     state.dragging = true;
     state.lastY = event.clientY;
+    state.startY = event.clientY;
+    state.hasCapture = false;
     state.velocity = 0;
     root.classList.add('is-dragging');
-    root.setPointerCapture?.(event.pointerId);
   };
   const onPointerMove = (event) => {
     state.pointer.x = event.clientX - window.innerWidth / 2;
     state.pointer.y = event.clientY - window.innerHeight / 2;
     if (!state.dragging) return;
+    if (!state.hasCapture && Math.abs(event.clientY - state.startY) > 4) {
+      root.setPointerCapture?.(event.pointerId);
+      state.hasCapture = true;
+    }
     const delta = state.lastY - event.clientY;
     state.lastY = event.clientY;
     const amount = delta / Math.max(120, window.innerHeight * 0.2);
@@ -92,7 +102,8 @@ export function renderHome(root, {
     if (event.clientY === state.lastY) state.velocity = 0;
     state.dragging = false;
     root.classList.remove('is-dragging');
-    root.releasePointerCapture?.(event.pointerId);
+    if (state.hasCapture) root.releasePointerCapture?.(event.pointerId);
+    state.hasCapture = false;
   };
   const onKeyDown = (event) => {
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
@@ -125,4 +136,3 @@ export function renderHome(root, {
     }
   };
 }
-
