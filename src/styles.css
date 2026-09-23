@@ -22,6 +22,7 @@
 html, body, #app { width: 100%; min-height: 100%; margin: 0; }
 html { background: #fafafa; }
 body { overflow: hidden; background: #fafafa; overscroll-behavior: none; }
+body.project-route { overflow-x: hidden; overflow-y: auto; }
 button, a { color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
 button { border: 0; }
 a { text-decoration: none; }
@@ -85,6 +86,25 @@ button:focus-visible, a:focus-visible { outline: 1px solid #000; outline-offset:
 }
 .project-card:hover, .project-card:focus-visible, .project-card[data-active] { filter: saturate(1.08) contrast(1.02); box-shadow: 0 18px 60px rgb(0 0 0 / 12%); }
 .project-card img { width: 100%; height: 100%; display: block; object-fit: cover; pointer-events: none; }
+.is-transition-source { opacity: 0 !important; }
+html[data-transition] .project-card:not(.is-transition-source),
+html[data-transition] .view-switcher,
+html[data-transition] .project-readout { opacity: 0 !important; transition: opacity .16s ease !important; }
+.shared-card {
+  position: fixed;
+  z-index: 2500;
+  left: var(--start-left);
+  top: var(--start-top);
+  width: var(--start-width);
+  height: var(--start-height);
+  background: #eee;
+  pointer-events: none;
+  transform-origin: center;
+  transition: left .58s cubic-bezier(.76,0,.24,1), top .58s cubic-bezier(.76,0,.24,1), width .58s cubic-bezier(.76,0,.24,1), height .58s cubic-bezier(.76,0,.24,1), opacity .5s ease;
+}
+.shared-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shared-card.is-centering { left: 50%; top: 50%; width: min(32.5vw, 416px); height: min(18.3vw, 234px); transform: translate(-50%, -50%); }
+.shared-card.is-revealing { width: 100vw; height: 56.25vw; max-height: 100vh; opacity: 0; }
 .project-readout {
   position: fixed;
   left: 12px;
@@ -128,7 +148,28 @@ button:focus-visible, a:focus-visible { outline: 1px solid #000; outline-offset:
 .index-row:hover { background: #000; color: #fff; }
 .index-row span:last-child { text-align: right; }
 
+.project-view { position: relative; width: 100%; min-height: 100vh; padding-top: 218px; opacity: 0; animation: project-in .65s .08s cubic-bezier(.19,1,.22,1) forwards; }
+.project-intro { display: grid; grid-template-columns: 200px minmax(0, 1fr); min-height: 42px; padding: 12px 14px 14px; }
+.project-intro p { margin: 0; max-width: 430px; text-transform: none; }
+.project-home { width: max-content; padding: 0; background: transparent; text-align: left; cursor: pointer; }
+.hero-media, .gallery-cell { position: relative; margin: 0; overflow: hidden; background: #e8e8e8; }
+.hero-media { width: 100%; aspect-ratio: 16 / 9; }
+.hero-media video { width: 100%; height: 100%; display: block; object-fit: cover; }
+.media-controls { position: absolute; inset: auto 4px 4px; display: grid; grid-template-columns: 62px 1fr 76px 82px; gap: 2px; opacity: 0; transition: opacity .3s ease; }
+.hero-media:hover .media-controls, .media-controls:focus-within, .media-controls.has-error { opacity: 1; }
+.media-controls > * { min-height: 39px; padding: 0 10px; border: 1px solid rgb(255 255 255 / 24%); border-radius: 6px; background: rgb(0 0 0 / 22%); color: #fff; backdrop-filter: blur(18px); display: flex; align-items: center; }
+.media-controls button { cursor: pointer; }
+.project-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; padding-top: 2px; }
+.gallery-cell { aspect-ratio: 16 / 9; }
+.project-still { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform 1.4s cubic-bezier(.19,1,.22,1); }
+.gallery-cell:hover .project-still { transform: scale(1.018); }
+.next-project { display: grid; grid-template-columns: 1fr auto; min-height: 190px; align-items: end; padding: 14px; border-top: 1px solid rgb(0 0 0 / 13%); transition: color .35s, background .35s; }
+.next-project:hover { color: #fff; background: #000; }
+.study-credit { display: flex; justify-content: space-between; padding: 14px; border-top: 1px solid rgb(0 0 0 / 13%); opacity: .35; text-transform: none; }
+.study-credit a { text-decoration: underline; }
+
 @keyframes overlay-in { from { opacity: 0; } }
+@keyframes project-in { to { opacity: 1; } }
 
 @media (max-width: 767px) {
   .header-nav { grid-template-columns: repeat(4, 1fr); }
@@ -139,6 +180,13 @@ button:focus-visible, a:focus-visible { outline: 1px solid #000; outline-offset:
   .contact-links { padding: 0 14px; }
   .glass-pill { flex: 1; text-align: center; }
   .legal-links { font-size: 9px; gap: 8px; }
+  .shared-card.is-centering { width: 58vw; height: 32.625vw; }
+  .project-view { padding-top: 190px; }
+  .project-intro { grid-template-columns: 1fr; gap: 10px; padding-bottom: 18px; }
+  .project-gallery { grid-template-columns: 1fr; }
+  .media-controls { grid-template-columns: 58px 1fr 72px; }
+  .fullscreen-toggle { display: none !important; }
+  .next-project { min-height: 145px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
