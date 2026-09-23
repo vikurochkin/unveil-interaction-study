@@ -65,7 +65,7 @@ button:focus-visible, a:focus-visible { outline: 1px solid #000; outline-offset:
 .brand-projects { margin-left: 1px; }
 
 #route-view, .home-view { position: fixed; inset: 0; }
-.home-view { overflow: hidden; touch-action: none; cursor: grab; perspective: 1250px; perspective-origin: 50% 50%; }
+.home-view { overflow: hidden; touch-action: none; cursor: grab; perspective: 1050px; perspective-origin: 50% 50%; }
 .home-view.is-dragging { cursor: grabbing; }
 .tunnel { position: absolute; inset: 0; transform-style: preserve-3d; }
 .project-card {
@@ -76,15 +76,31 @@ button:focus-visible, a:focus-visible { outline: 1px solid #000; outline-offset:
   width: clamp(210px, 27vw, 420px);
   aspect-ratio: var(--card-ratio);
   padding: 0;
-  background: #eee;
-  box-shadow: 0 10px 38px rgb(0 0 0 / 5%);
+  background: transparent;
   cursor: zoom-in;
   transform-style: preserve-3d;
   transform: translate3d(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)), var(--z, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg)) scale(var(--scale, 1));
   will-change: transform, opacity;
-  transition: filter .35s ease, box-shadow .35s ease;
 }
-.project-card:hover, .project-card:focus-visible, .project-card[data-active] { filter: saturate(1.08) contrast(1.02); box-shadow: 0 18px 60px rgb(0 0 0 / 12%); }
+.project-card__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #eee;
+  box-shadow: 0 10px 38px rgb(0 0 0 / 7%);
+  transform: translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.19,1,.22,1), filter .35s ease, box-shadow .35s ease;
+  will-change: transform;
+}
+.project-card:hover .project-card__media,
+.project-card:focus-visible .project-card__media,
+.project-card[data-hovered] .project-card__media {
+  filter: saturate(1.08) contrast(1.02);
+  box-shadow: 0 20px 65px rgb(0 0 0 / 14%);
+  transform: translate3d(clamp(72px, 8vw, 108px), -10px, 46px);
+}
 .project-card img { width: 100%; height: 100%; display: block; object-fit: cover; pointer-events: none; }
 .is-transition-source { opacity: 0 !important; }
 html[data-transition] .project-card:not(.is-transition-source),
@@ -100,10 +116,11 @@ html[data-transition] .project-readout { opacity: 0 !important; transition: opac
   background: #eee;
   pointer-events: none;
   transform-origin: center;
+  transform: rotateY(var(--start-ry, -30deg));
   transition: left .58s cubic-bezier(.76,0,.24,1), top .58s cubic-bezier(.76,0,.24,1), width .58s cubic-bezier(.76,0,.24,1), height .58s cubic-bezier(.76,0,.24,1), opacity .5s ease;
 }
 .shared-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.shared-card.is-centering { left: 50%; top: 50%; width: min(32.5vw, 416px); height: min(18.3vw, 234px); transform: translate(-50%, -50%); }
+.shared-card.is-centering { left: 50%; top: 50%; width: min(32.5vw, 416px); height: min(18.3vw, 234px); transform: translate(-50%, -50%) rotateY(0deg); }
 .shared-card.is-revealing { width: 100vw; height: 56.25vw; max-height: 100vh; opacity: 0; }
 .project-readout {
   position: fixed;

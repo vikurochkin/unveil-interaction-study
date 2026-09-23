@@ -19,6 +19,7 @@ export function createTransitionController({ document: doc, reducedMotion = fals
       layer.style.setProperty('--start-top', `${rect.top}px`);
       layer.style.setProperty('--start-width', `${Math.max(1, rect.width)}px`);
       layer.style.setProperty('--start-height', `${Math.max(1, rect.height)}px`);
+      layer.style.setProperty('--start-ry', source?.style?.getPropertyValue?.('--ry') || '-30deg');
       const image = doc.createElement('img');
       image.alt = '';
       image.src = sourceImage?.currentSrc || sourceImage?.src || `${project.image}?auto=format&fit=max&w=1600&q=90`;
@@ -41,4 +42,3 @@ export function createTransitionController({ document: doc, reducedMotion = fals
     }
   };
 }
-

@@ -16,13 +16,26 @@ function makeView(overrides = {}) {
   return { root, view, onSelect };
 }
 
-test('renders every project as a named button and selects NTO Stratus', () => {
+test('renders every project as a native project link and selects NTO Stratus', () => {
   const { root, view, onSelect } = makeView();
   expect(root.querySelectorAll('.project-card')).toHaveLength(PROJECTS.length);
-  const button = root.querySelector('[data-project="nto-stratus"]');
-  expect(button.getAttribute('aria-label')).toContain('NTO / Stratus');
-  button.click();
-  expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ slug: 'nto-stratus' }), button);
+  const link = root.querySelector('[data-project="nto-stratus"]');
+  expect(link.tagName).toBe('A');
+  expect(link.getAttribute('href')).toBe('/nto-stratus');
+  expect(link.getAttribute('aria-label')).toContain('NTO / Stratus');
+  link.click();
+  expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ slug: 'nto-stratus' }), link);
+  view.destroy();
+});
+
+test('hover marks the card so its media can slide out from the catalogue', () => {
+  const { root, view } = makeView();
+  const link = root.querySelector('[data-project="nto-stratus"]');
+  expect(link.querySelector('.project-card__media')).not.toBeNull();
+  link.dispatchEvent(new MouseEvent('mouseenter'));
+  expect(link.hasAttribute('data-hovered')).toBe(true);
+  link.dispatchEvent(new MouseEvent('mouseleave'));
+  expect(link.hasAttribute('data-hovered')).toBe(false);
   view.destroy();
 });
 
@@ -59,6 +72,17 @@ test('a simple press does not capture the pointer before the card click', () => 
     bubbles: true
   }));
   expect(root.setPointerCapture).not.toHaveBeenCalled();
+  view.destroy();
+});
+
+test('dragging over a card suppresses its following click', () => {
+  const { root, view, onSelect } = makeView();
+  const link = root.querySelector('[data-project="nto-stratus"]');
+  link.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 9, clientY: 160, bubbles: true }));
+  link.dispatchEvent(new PointerEvent('pointermove', { pointerId: 9, clientY: 120, bubbles: true }));
+  link.dispatchEvent(new PointerEvent('pointerup', { pointerId: 9, clientY: 120, bubbles: true }));
+  link.click();
+  expect(onSelect).not.toHaveBeenCalled();
   view.destroy();
 });
 

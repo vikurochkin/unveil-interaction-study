@@ -15,24 +15,42 @@ export function renderHome(root, {
   const readout = root.querySelector('.project-readout');
   const ntoIndex = Math.max(0, projects.findIndex((project) => project.slug === 'nto-stratus'));
   const cards = projects.map((project, index) => {
-    const button = document.createElement('button');
-    button.className = 'project-card';
-    button.type = 'button';
-    button.dataset.project = project.slug;
-    button.dataset.index = String(index);
-    button.setAttribute('aria-label', `Open project ${project.title}`);
-    button.style.setProperty('--card-ratio', String([1.33, 0.78, 1, 1.5, 0.67][index % 5]));
+    const link = document.createElement('a');
+    link.className = 'project-card';
+    link.href = '/nto-stratus';
+    link.dataset.project = project.slug;
+    link.dataset.index = String(index);
+    link.setAttribute('aria-label', `Open project ${project.title}`);
+    link.style.setProperty('--card-ratio', String([1.33, 0.78, 1, 1.5, 0.67][index % 5]));
+    const media = document.createElement('span');
+    media.className = 'project-card__media';
     const image = document.createElement('img');
     image.alt = '';
     image.decoding = 'async';
     image.loading = Math.abs(index - ntoIndex) < 7 ? 'eager' : 'lazy';
     image.src = imageUrl(project.image);
-    button.append(image);
-    button.addEventListener('mouseenter', () => { readout.textContent = `${project.title} — ${String(index + 1).padStart(2, '0')}`; });
-    button.addEventListener('focus', () => { readout.textContent = `${project.title} — ${String(index + 1).padStart(2, '0')}`; });
-    button.addEventListener('click', () => onSelect(project, button));
-    tunnel.append(button);
-    return button;
+    media.append(image);
+    link.append(media);
+    link.addEventListener('mouseenter', () => {
+      link.setAttribute('data-hovered', '');
+      readout.textContent = `${project.title} — ${String(index + 1).padStart(2, '0')}`;
+    });
+    link.addEventListener('mouseleave', () => { link.removeAttribute('data-hovered'); });
+    link.addEventListener('focus', () => {
+      link.setAttribute('data-hovered', '');
+      readout.textContent = `${project.title} — ${String(index + 1).padStart(2, '0')}`;
+    });
+    link.addEventListener('blur', () => { link.removeAttribute('data-hovered'); });
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (state.suppressNextClick) {
+        state.suppressNextClick = false;
+        return;
+      }
+      onSelect(project, link);
+    });
+    tunnel.append(link);
+    return link;
   });
 
   const state = {
@@ -43,7 +61,9 @@ export function renderHome(root, {
     dragging: false,
     lastY: 0,
     startY: 0,
-    hasCapture: false
+    hasCapture: false,
+    dragDistance: 0,
+    suppressNextClick: false
   };
   let frameId = 0;
 
@@ -65,7 +85,8 @@ export function renderHome(root, {
       card.style.setProperty('--rz', `${transform.rotateZ}deg`);
       card.style.setProperty('--scale', transform.scale);
       card.style.opacity = String(transform.opacity);
-      card.style.zIndex = String(Math.max(1, 100 - Math.round(Math.abs(index - state.position) * 3)));
+      card.style.pointerEvents = transform.opacity > 0.08 ? 'auto' : 'none';
+      card.style.zIndex = String(Math.max(1, 1000 + Math.round(transform.z)));
       card.toggleAttribute('data-active', Math.abs(index - state.position) < 0.5);
     });
     frameId = requestFrame(draw);
@@ -81,6 +102,7 @@ export function renderHome(root, {
     state.lastY = event.clientY;
     state.startY = event.clientY;
     state.hasCapture = false;
+    state.dragDistance = 0;
     state.velocity = 0;
     root.classList.add('is-dragging');
   };
@@ -93,6 +115,7 @@ export function renderHome(root, {
       state.hasCapture = true;
     }
     const delta = state.lastY - event.clientY;
+    state.dragDistance += Math.abs(delta);
     state.lastY = event.clientY;
     const amount = delta / Math.max(120, window.innerHeight * 0.2);
     state.target = Math.max(0, Math.min(projects.length - 1, state.target + amount));
@@ -101,6 +124,7 @@ export function renderHome(root, {
   const onPointerUp = (event) => {
     if (event.clientY === state.lastY) state.velocity = 0;
     state.dragging = false;
+    state.suppressNextClick = state.dragDistance > 4;
     root.classList.remove('is-dragging');
     if (state.hasCapture) root.releasePointerCapture?.(event.pointerId);
     state.hasCapture = false;

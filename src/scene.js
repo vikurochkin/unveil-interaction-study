@@ -14,13 +14,13 @@ export function getCardTransform(index, position, viewport = {}, pointer = {}) {
   const distance = Math.abs(relative);
 
   return {
-    x: finite(relative * width * 0.17 + pointerX * (18 + distance * 2)),
-    y: finite(relative * -height * 0.16 + Math.sin(relative * 0.78) * height * 0.045 + pointerY * 14),
-    z: distance === 0 ? 0 : finite(-distance * 118),
-    rotateX: finite(pointerY * -1.8),
-    rotateY: finite(relative * -2.4 + pointerX * 2.2),
-    rotateZ: finite(relative * -0.7),
-    scale: finite(Math.max(0.48, 1 - distance * 0.045)),
+    x: finite(relative * width * 0.135 + pointerX * 8),
+    y: finite(relative * -height * 0.12 + pointerY * 6),
+    z: relative === 0 ? 0 : finite(Math.max(-980, Math.min(620, relative * -140))),
+    rotateX: finite(pointerY * -1.2),
+    rotateY: finite(-30 + pointerX * 1.5),
+    rotateZ: 0,
+    scale: 1,
     opacity: finite(Math.max(0, 1 - Math.max(0, distance - 7) * 0.22))
   };
 }

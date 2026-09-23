@@ -20,21 +20,25 @@ describe('getCardTransform', () => {
   const viewport = { width: 1280, height: 720 };
   const pointer = { x: 0, y: 0 };
 
-  test('centers the active card on the tunnel path', () => {
+  test('keeps the active card centered but turned like the original catalogue', () => {
     expect(getCardTransform(2, 2, viewport, pointer)).toMatchObject({
       x: 0,
       y: 0,
       z: 0,
-      rotateY: 0,
+      rotateY: -30,
       opacity: 1
     });
   });
 
-  test('places neighbors diagonally through depth', () => {
+  test('places neighbors on opposite sides of a diagonal depth line', () => {
+    const previous = getCardTransform(1, 2, viewport, pointer);
     const next = getCardTransform(3, 2, viewport, pointer);
     expect(next.x).toBeGreaterThan(100);
     expect(next.y).toBeLessThan(0);
     expect(next.z).toBeLessThan(0);
+    expect(previous.x).toBeLessThan(-100);
+    expect(previous.y).toBeGreaterThan(0);
+    expect(previous.z).toBeGreaterThan(0);
   });
 
   test('stays finite for distant positions and zero-sized viewports', () => {
@@ -42,4 +46,3 @@ describe('getCardTransform', () => {
     Object.values(result).forEach((value) => expect(Number.isFinite(value)).toBe(true));
   });
 });
-
