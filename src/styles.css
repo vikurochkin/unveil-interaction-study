@@ -166,7 +166,7 @@ html[data-transition] .cursor-label { opacity: 0 !important; transition: opacity
   color: #fff;
   opacity: 0;
   transform: translate3d(calc(var(--cursor-x, 0px) + 14px), calc(var(--cursor-y, 0px) + 14px), 0);
-  mix-blend-mode: difference;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 65%);
   white-space: nowrap;
   pointer-events: none;
   transition: opacity .12s ease;
