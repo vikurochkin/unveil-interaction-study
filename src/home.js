@@ -22,6 +22,8 @@ export function renderHome(root, {
     link.dataset.index = String(index);
     link.setAttribute('aria-label', `Open project ${project.title}`);
     link.style.setProperty('--card-ratio', String([1.33, 0.78, 1, 1.5, 0.67][index % 5]));
+    const object = document.createElement('span');
+    object.className = 'project-card__object';
     const media = document.createElement('span');
     media.className = 'project-card__media';
     const image = document.createElement('img');
@@ -30,7 +32,8 @@ export function renderHome(root, {
     image.loading = Math.abs(index - ntoIndex) < 7 ? 'eager' : 'lazy';
     image.src = imageUrl(project.image);
     media.append(image);
-    link.append(media);
+    object.append(media);
+    link.append(object);
     link.addEventListener('mouseenter', () => {
       link.setAttribute('data-hovered', '');
       cursorLabel.textContent = project.title;

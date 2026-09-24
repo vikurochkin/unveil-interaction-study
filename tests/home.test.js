@@ -28,10 +28,12 @@ test('renders every project as a native project link and selects NTO Stratus', (
   view.destroy();
 });
 
-test('hover marks the card so its media can slide out from the catalogue', () => {
+test('hover moves the image and its glass shell as one card object', () => {
   const { root, view } = makeView();
   const link = root.querySelector('[data-project="nto-stratus"]');
-  expect(link.querySelector('.project-card__media')).not.toBeNull();
+  const object = link.querySelector('.project-card__object');
+  expect(object).not.toBeNull();
+  expect(object.querySelector(':scope > .project-card__media')).not.toBeNull();
   link.dispatchEvent(new MouseEvent('mouseenter'));
   expect(link.hasAttribute('data-hovered')).toBe(true);
   link.dispatchEvent(new MouseEvent('mouseleave'));
