@@ -39,6 +39,21 @@ test('hover marks the card so its media can slide out from the catalogue', () =>
   view.destroy();
 });
 
+test('hovered project title follows the pointer and disappears on leave', () => {
+  const { root, view } = makeView();
+  const link = root.querySelector('[data-project="nto-stratus"]');
+  const label = root.querySelector('.cursor-label');
+  link.dispatchEvent(new MouseEvent('mouseenter'));
+  root.dispatchEvent(new PointerEvent('pointermove', { clientX: 321, clientY: 234, bubbles: true }));
+  expect(label.textContent).toContain('NTO / Stratus');
+  expect(label.style.getPropertyValue('--cursor-x')).toBe('321px');
+  expect(label.style.getPropertyValue('--cursor-y')).toBe('234px');
+  expect(label.hasAttribute('data-visible')).toBe(true);
+  link.dispatchEvent(new MouseEvent('mouseleave'));
+  expect(label.hasAttribute('data-visible')).toBe(false);
+  view.destroy();
+});
+
 test('wheel motion updates the target scene position', () => {
   const { root, view } = makeView();
   const before = view.getState().target;
@@ -86,20 +101,12 @@ test('dragging over a card suppresses its following click', () => {
   view.destroy();
 });
 
-test('drag inertia cannot push the scene beyond the last project', () => {
-  let nextFrame;
-  const root = document.createElement('main');
-  document.body.append(root);
-  const view = renderHome(root, {
-    projects: PROJECTS,
-    onSelect: vi.fn(),
-    requestFrame: (callback) => { nextFrame = callback; return 1; },
-    cancelFrame: vi.fn()
-  });
-  root.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 4, clientY: 800, bubbles: true }));
-  root.dispatchEvent(new PointerEvent('pointermove', { pointerId: 4, clientY: -800, bubbles: true }));
-  for (let frame = 0; frame < 12; frame += 1) nextFrame();
-  expect(view.getState().target).toBeLessThanOrEqual(PROJECTS.length - 1);
+test('wheel motion continues past the final project without changing direction', () => {
+  const { root, view } = makeView();
+  for (let step = 0; step < 12; step += 1) {
+    root.dispatchEvent(new WheelEvent('wheel', { deltaY: 440, cancelable: true }));
+  }
+  expect(view.getState().target).toBeGreaterThan(PROJECTS.length - 1);
   view.destroy();
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getCardTransform, wrapIndex } from '../src/scene.js';
+import { getCardTransform, getLoopedRelative, wrapIndex } from '../src/scene.js';
 
 describe('wrapIndex', () => {
   test.each([
@@ -13,6 +13,17 @@ describe('wrapIndex', () => {
 
   test('returns zero for an empty collection', () => {
     expect(wrapIndex(3, 0)).toBe(0);
+  });
+});
+
+describe('getLoopedRelative', () => {
+  test.each([
+    [0, 43, 43, 0],
+    [42, 43, 43, -1],
+    [0, -1, 43, 1],
+    [1, 87, 43, 0]
+  ])('keeps project %s continuous around position %s', (index, position, length, expected) => {
+    expect(getLoopedRelative(index, position, length)).toBe(expected);
   });
 });
 
@@ -44,5 +55,9 @@ describe('getCardTransform', () => {
   test('stays finite for distant positions and zero-sized viewports', () => {
     const result = getCardTransform(400, -10000, { width: 0, height: 0 }, { x: 20, y: -20 });
     Object.values(result).forEach((value) => expect(Number.isFinite(value)).toBe(true));
+  });
+
+  test('recycles the first card after the final project', () => {
+    expect(getCardTransform(0, 43, viewport, pointer, 43)).toMatchObject({ x: 0, y: 0, z: 0 });
   });
 });

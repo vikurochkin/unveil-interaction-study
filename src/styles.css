@@ -77,22 +77,56 @@ button:focus-visible, a:focus-visible { outline: 1px solid #000; outline-offset:
   aspect-ratio: var(--card-ratio);
   padding: 0;
   background: transparent;
-  cursor: zoom-in;
+  cursor: pointer;
   transform-style: preserve-3d;
   transform: translate3d(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)), var(--z, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg)) scale(var(--scale, 1));
   will-change: transform, opacity;
 }
+.project-card::before {
+  content: "";
+  position: absolute;
+  inset: 3px -8px -8px 4px;
+  border: 1px solid rgb(255 255 255 / 26%);
+  background: rgb(215 220 225 / 20%);
+  box-shadow: 0 18px 45px rgb(0 0 0 / 10%);
+  transform: translateZ(-12px);
+  pointer-events: none;
+}
+.project-card::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 0;
+  width: 12px;
+  height: calc(100% - 2px);
+  background: linear-gradient(90deg, rgb(255 255 255 / 42%), rgb(95 105 115 / 18%));
+  transform: rotateY(90deg);
+  transform-origin: left center;
+  pointer-events: none;
+}
 .project-card__media {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #eee;
+  border: 1px solid rgb(255 255 255 / 32%);
+  background: rgb(238 241 243 / 34%);
+  backdrop-filter: blur(2px) saturate(1.08);
+  -webkit-backdrop-filter: blur(2px) saturate(1.08);
   box-shadow: 0 10px 38px rgb(0 0 0 / 7%);
   transform: translate3d(0, 0, 0);
   transform-style: preserve-3d;
   transition: transform .5s cubic-bezier(.19,1,.22,1), filter .35s ease, box-shadow .35s ease;
   will-change: transform;
+}
+.project-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(118deg, rgb(255 255 255 / 12%), transparent 32%, rgb(255 255 255 / 5%) 72%, transparent);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 5%);
+  pointer-events: none;
 }
 .project-card:hover .project-card__media,
 .project-card:focus-visible .project-card__media,
@@ -101,11 +135,12 @@ button:focus-visible, a:focus-visible { outline: 1px solid #000; outline-offset:
   box-shadow: 0 20px 65px rgb(0 0 0 / 14%);
   transform: translate3d(clamp(72px, 8vw, 108px), -10px, 46px);
 }
-.project-card img { width: 100%; height: 100%; display: block; object-fit: cover; pointer-events: none; }
+.project-card img { width: 100%; height: 100%; display: block; object-fit: cover; opacity: .9; pointer-events: none; transition: opacity .5s cubic-bezier(.19,1,.22,1); }
+.project-card:hover img, .project-card:focus-visible img, .project-card[data-hovered] img { opacity: .99; }
 .is-transition-source { opacity: 0 !important; }
 html[data-transition] .project-card:not(.is-transition-source),
 html[data-transition] .view-switcher,
-html[data-transition] .project-readout { opacity: 0 !important; transition: opacity .16s ease !important; }
+html[data-transition] .cursor-label { opacity: 0 !important; transition: opacity .16s ease !important; }
 .shared-card {
   position: fixed;
   z-index: 2500;
@@ -122,15 +157,22 @@ html[data-transition] .project-readout { opacity: 0 !important; transition: opac
 .shared-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .shared-card.is-centering { left: 50%; top: 50%; width: min(32.5vw, 416px); height: min(18.3vw, 234px); transform: translate(-50%, -50%) rotateY(0deg); }
 .shared-card.is-revealing { width: 100vw; height: 56.25vw; max-height: 100vh; opacity: 0; }
-.project-readout {
+.cursor-label {
   position: fixed;
-  left: 12px;
-  bottom: 12px;
-  z-index: 200;
-  min-height: 13px;
-  opacity: .36;
+  left: 0;
+  top: 0;
+  z-index: 1600;
+  max-width: 260px;
+  color: #fff;
+  opacity: 0;
+  transform: translate3d(calc(var(--cursor-x, 0px) + 14px), calc(var(--cursor-y, 0px) + 14px), 0);
+  mix-blend-mode: difference;
+  white-space: nowrap;
   pointer-events: none;
+  transition: opacity .12s ease;
 }
+.cursor-label[data-visible] { opacity: 1; }
+.home-view.is-dragging .cursor-label { opacity: 0; }
 
 .view-switcher {
   position: fixed;
@@ -192,7 +234,7 @@ html[data-transition] .project-readout { opacity: 0 !important; transition: opac
   .header-nav { grid-template-columns: repeat(4, 1fr); }
   .brand-projects { display: none; }
   .project-card { width: clamp(185px, 55vw, 260px); }
-  .project-readout { display: none; }
+  .cursor-label { display: none; }
   .address-link { display: none; }
   .contact-links { padding: 0 14px; }
   .glass-pill { flex: 1; text-align: center; }

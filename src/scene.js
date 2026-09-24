@@ -5,12 +5,19 @@ export function wrapIndex(value, length) {
   return ((finite(value) % length) + length) % length;
 }
 
-export function getCardTransform(index, position, viewport = {}, pointer = {}) {
+export function getLoopedRelative(index, position, length) {
+  const relative = finite(index) - finite(position);
+  if (!Number.isFinite(length) || length <= 0) return relative;
+  return wrapIndex(relative + length / 2, length) - length / 2;
+}
+
+export function getCardTransform(index, position, viewport = {}, pointer = {}, loopLength = 0) {
   const width = Math.max(1, finite(viewport.width, 1));
   const height = Math.max(1, finite(viewport.height, 1));
   const pointerX = Math.max(-1, Math.min(1, finite(pointer.x) / Math.max(1, width * 0.5)));
   const pointerY = Math.max(-1, Math.min(1, finite(pointer.y) / Math.max(1, height * 0.5)));
-  const relative = Math.max(-12, Math.min(12, finite(index) - finite(position)));
+  const loopedRelative = getLoopedRelative(index, position, loopLength);
+  const relative = Math.max(-12, Math.min(12, loopedRelative));
   const distance = Math.abs(relative);
 
   return {

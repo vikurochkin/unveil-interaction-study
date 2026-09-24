@@ -1,4 +1,4 @@
-import { getCardTransform } from './scene.js';
+import { getCardTransform, getLoopedRelative } from './scene.js';
 
 const imageUrl = (url) => `${url}?auto=format&fit=max&w=720&q=84`;
 
@@ -10,9 +10,9 @@ export function renderHome(root, {
 }) {
   root.className = 'home-view';
   root.tabIndex = -1;
-  root.innerHTML = '<div class="tunnel" aria-label="Projects"></div><div class="project-readout" aria-live="polite"></div>';
+  root.innerHTML = '<div class="tunnel" aria-label="Projects"></div><div class="cursor-label" aria-live="polite"></div>';
   const tunnel = root.querySelector('.tunnel');
-  const readout = root.querySelector('.project-readout');
+  const cursorLabel = root.querySelector('.cursor-label');
   const ntoIndex = Math.max(0, projects.findIndex((project) => project.slug === 'nto-stratus'));
   const cards = projects.map((project, index) => {
     const link = document.createElement('a');
@@ -33,12 +33,16 @@ export function renderHome(root, {
     link.append(media);
     link.addEventListener('mouseenter', () => {
       link.setAttribute('data-hovered', '');
-      readout.textContent = `${project.title} — ${String(index + 1).padStart(2, '0')}`;
+      cursorLabel.textContent = project.title;
+      cursorLabel.setAttribute('data-visible', '');
     });
-    link.addEventListener('mouseleave', () => { link.removeAttribute('data-hovered'); });
+    link.addEventListener('mouseleave', () => {
+      link.removeAttribute('data-hovered');
+      cursorLabel.removeAttribute('data-visible');
+    });
     link.addEventListener('focus', () => {
       link.setAttribute('data-hovered', '');
-      readout.textContent = `${project.title} — ${String(index + 1).padStart(2, '0')}`;
+      cursorLabel.textContent = project.title;
     });
     link.addEventListener('blur', () => { link.removeAttribute('data-hovered'); });
     link.addEventListener('click', (event) => {
@@ -71,12 +75,9 @@ export function renderHome(root, {
     state.position += (state.target - state.position) * 0.075;
     state.velocity *= 0.9;
     state.target += state.velocity;
-    const boundedTarget = Math.max(0, Math.min(projects.length - 1, state.target));
-    if (boundedTarget !== state.target) state.velocity = 0;
-    state.target = boundedTarget;
     const viewport = { width: window.innerWidth, height: window.innerHeight };
     cards.forEach((card, index) => {
-      const transform = getCardTransform(index, state.position, viewport, state.pointer);
+      const transform = getCardTransform(index, state.position, viewport, state.pointer, projects.length);
       card.style.setProperty('--x', `${transform.x}px`);
       card.style.setProperty('--y', `${transform.y}px`);
       card.style.setProperty('--z', `${transform.z}px`);
@@ -87,7 +88,7 @@ export function renderHome(root, {
       card.style.opacity = String(transform.opacity);
       card.style.pointerEvents = transform.opacity > 0.08 ? 'auto' : 'none';
       card.style.zIndex = String(Math.max(1, 1000 + Math.round(transform.z)));
-      card.toggleAttribute('data-active', Math.abs(index - state.position) < 0.5);
+      card.toggleAttribute('data-active', Math.abs(getLoopedRelative(index, state.position, projects.length)) < 0.5);
     });
     frameId = requestFrame(draw);
   };
@@ -95,7 +96,6 @@ export function renderHome(root, {
   const onWheel = (event) => {
     event.preventDefault();
     state.target += Math.sign(event.deltaY || event.deltaX) * Math.min(1.5, Math.abs(event.deltaY || event.deltaX) / 220);
-    state.target = Math.max(0, Math.min(projects.length - 1, state.target));
   };
   const onPointerDown = (event) => {
     state.dragging = true;
@@ -104,11 +104,14 @@ export function renderHome(root, {
     state.hasCapture = false;
     state.dragDistance = 0;
     state.velocity = 0;
+    cursorLabel.removeAttribute('data-visible');
     root.classList.add('is-dragging');
   };
   const onPointerMove = (event) => {
     state.pointer.x = event.clientX - window.innerWidth / 2;
     state.pointer.y = event.clientY - window.innerHeight / 2;
+    cursorLabel.style.setProperty('--cursor-x', `${event.clientX}px`);
+    cursorLabel.style.setProperty('--cursor-y', `${event.clientY}px`);
     if (!state.dragging) return;
     if (!state.hasCapture && Math.abs(event.clientY - state.startY) > 4) {
       root.setPointerCapture?.(event.pointerId);
@@ -118,7 +121,7 @@ export function renderHome(root, {
     state.dragDistance += Math.abs(delta);
     state.lastY = event.clientY;
     const amount = delta / Math.max(120, window.innerHeight * 0.2);
-    state.target = Math.max(0, Math.min(projects.length - 1, state.target + amount));
+    state.target += amount;
     state.velocity = Number.isFinite(amount) ? amount * 0.08 : 0;
   };
   const onPointerUp = (event) => {
@@ -132,7 +135,7 @@ export function renderHome(root, {
   const onKeyDown = (event) => {
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
     event.preventDefault();
-    state.target = Math.max(0, Math.min(projects.length - 1, state.target + (event.key === 'ArrowDown' ? 1 : -1)));
+    state.target += event.key === 'ArrowDown' ? 1 : -1;
   };
 
   root.addEventListener('wheel', onWheel, { passive: false });
@@ -147,7 +150,10 @@ export function renderHome(root, {
     getState: () => ({ ...state, pointer: { ...state.pointer } }),
     focusProject(slug) {
       const index = projects.findIndex((project) => project.slug === slug);
-      if (index >= 0) state.target = index;
+      if (index >= 0) {
+        const nearestCycle = Math.round((state.target - index) / projects.length);
+        state.target = index + nearestCycle * projects.length;
+      }
     },
     destroy() {
       cancelFrame(frameId);
